@@ -1,30 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Online Voting System</title>
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
   <header>
     <h1>Online Voting System</h1>
+    <p>Secure & Transparent Voting</p>
   </header>
 
   <nav>
-    <a href="#home">Home</a>
-    <a href="#register">Register</a>
-    <a href="#login">Login</a>
-    <a href="#dashboard">Dashboard</a>
-    <a href="#admin">Admin</a>
+    <a href="#home" data-page="home">Home</a>
+    <a href="#vote" data-page="vote">Vote</a>
+    <a href="#results" data-page="results">Results</a>
+    <a href="#about" data-page="about">About</a>
   </nav>
 
-  <div class="container" id="content">
-    <h2>Welcome to the Online Voting System</h2>
-    <p>Please register or login to continue.</p>
-  </div>
+  <main class="container">
+
+    <!-- Home -->
+    <section id="home" class="page active">
+      <h2>Welcome to Online Voting System</h2>
+      <p>Exercise your democratic right in a secure voting environment. One vote per registered Voter ID.</p>
+      
+      <div class="info-grid">
+        <div class="info-card">
+          <h3>🔒 Secure</h3>
+          <p>Your vote is protected</p>
+        </div>
+        <div class="info-card">
+          <h3>✓ Verified</h3>
+          <p>One vote per ID</p>
+        </div>
+        <div class="info-card">
+          <h3>📊 Transparent</h3>
+          <p>Real-time results</p>
+        </div>
+      </div>
+
+      <button id="startVoteBtn" class="btn btn-primary">Proceed to Vote →</button>
+    </section>
+
+    <!-- Vote -->
+    <section id="vote" class="page">
+      <h2>Cast Your Vote</h2>
+      
+      <form id="voterIdForm" class="voter-form">
+        <div class="form-group">
+          <label for="voterIdInput">Voter ID <span class="required">*</span></label>
+          <input 
+            type="text" 
+            id="voterIdInput" 
+            placeholder="Enter your Voter ID(e.g.,VID12345)" 
+            required
+            minlength="5"
+            maxlength="20"
+          />
+          <small class="form-help">Enter your unique Voter ID(5-20 characters)</small>
+          <span id="voterIdError" class="form-error"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Continue to Ballot</button>
+      </form>
+
+      <div id="candidateList"></div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="page">
+      <h2>Election Results</h2>
+      <p class="results-subtitle">Live vote count and statistics</p>
+      
+      <div id="resultsStats"></div>
+      <div id="resultsContainer"></div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="page">
+      <h2>About This System</h2>
+      
+      <div class="about-section">
+        <h3>Project Overview</h3>
+        <p>A frontend-only online voting system demonstrating secure voting principles using modern web technologies.</p>
+      </div>
+
+      <div class="about-section">
+        <h3>Features</h3>
+        <ul>
+          <li>Frontend-only online voting simulation</li>
+          <li>No backend or database dependencies</li>
+          <li>Uses browser localStorage</li>
+          <li>One vote per Voter ID</li>
+          <li>Real-time results</li>
+          <li>Fully responsive design</li>
+        </ul>
+      </div>
+
+      <div class="about-section">
+        <h3>How It Works</h3>
+        <ol>
+          <li>Enter your unique Voter ID</li>
+          <li>Select your preferred candidate</li>
+          <li>Confirm your vote</li>
+          <li>View live results</li>
+        </ol>
+      </div>
+
+      <div class="tech-stack">
+        <h3>Built With</h3>
+        <div class="tech-badges">
+          <span class="badge">HTML5</span>
+          <span class="badge">CSS3</span>
+          <span class="badge">JavaScript</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>© 2026 Online Voting System</p>
+    <p class="developer-credits">
+      Made by <strong>Fida Hussain</strong>
+    </p>
+    <div class="social-links">
+      <a href="https://www.linkedin.com/in/fida-hussain-38511a2a6" target="_blank" title="LinkedIn">
+        <i class="fab fa-linkedin"></i>
+      </a>
+      <a href="https://github.com/Fida1343" target="_blank" title="GitHub">
+        <i class="fab fa-github"></i>
+      </a>
+      <a href="mailto:fidahussain70040@gmail.com" title="Email">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </div>
+  </footer>
 
   <script src="js/app.js"></script>
 </body>

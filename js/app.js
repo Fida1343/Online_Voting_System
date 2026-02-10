@@ -1,139 +1,171 @@
-const content = document.getElementById("content");
-const API_BASE = "http://localhost:5000";
+const pages = document.querySelectorAll(".page");
+const navLinks = document.querySelectorAll("nav a");
 
-/* Home */
-function loadHome() {
-  content.innerHTML = `
-    <h2>Welcome to the Online Voting System</h2>
-    <p>This is a secure platform where registered users can cast their votes online.</p>
-  `;
+const startVoteBtn = document.getElementById("startVoteBtn");
+const voterIdForm = document.getElementById("voterIdForm");
+const voterIdInput = document.getElementById("voterIdInput");
+const voterIdError = document.getElementById("voterIdError");
+const candidateList = document.getElementById("candidateList");
+const resultsStats = document.getElementById("resultsStats");
+const resultsContainer = document.getElementById("resultsContainer");
+
+/* Data */
+const candidates = [
+  { id: 1, name: "Anil Kumar", party: "Party A" },
+  { id: 2, name: "Pooja Gupta", party: "Party B" },
+  { id: 3, name: "Rahul Mehta", party: "Party C" }
+];
+
+/*Page Navigation*/
+function showPage(pageId) {
+  pages.forEach(page => page.classList.remove("active"));
+  document.getElementById(pageId).classList.add("active");
 }
 
-/* Register */
-function loadRegister() {
-  content.innerHTML = `
-    <h2>User Registration</h2>
-    <form onsubmit="registerUser(event)">
-      <input id="name" type="text" placeholder="Full Name" required>
-      <input id="voterId" type="text" placeholder="Unique Voter ID" required>
-      <input id="email" type="email" placeholder="Email" required>
-      <input id="password" type="password" placeholder="Password" required>
-      <button type="submit">Register</button>
-    </form>
-  `;
-}
-
-function registerUser(e) {
+startVoteBtn.addEventListener("click", () => {
+  showPage("vote");
+});
+voterIdForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  
+  const voterId = voterIdInput.value.trim();
+  voterIdError.textContent = "";
+  
+  //Validation
+  if (!voterId) {
+    voterIdError.textContent = "Voter ID is required";
+    return;
+  }
+  if (voterId.length < 5) {
+    voterIdError.textContent = "Voter ID must be at least 5 characters";
+    return;
+  }
 
-  const data = {
-    voter_id: voterId.value,
-    name: name.value,
-    email: email.value,
-    password: password.value
-  };
+  //Check if already voted
+  const votedUsers = JSON.parse(localStorage.getItem("votedUsers")) || [];  
+  if (votedUsers.includes(voterId)) {
+    voterIdError.textContent = "You have already voted with this Voter ID";
+    setTimeout(() => {
+      showResults();
+      showPage("results");
+    }, 1500);
+    return;
+  }
+  //Store current voter
+  localStorage.setItem("currentVoter", voterId);
+  loadCandidates();
+});
 
-  fetch(`${API_BASE}/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  })
-    .then(res => res.json())
-    .then(res => alert(res.message))
-    .catch(() => alert("Registration failed"));
+/*Load Candidates*/
+function loadCandidates() {
+  candidateList.innerHTML = "<h3>Select Your Candidate</h3>";
+  candidates.forEach(candidate => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div>
+        <h3>${candidate.name}</h3>
+        <p>${candidate.party}</p>
+      </div>
+      <button class="btn btn-primary">Vote</button>
+    `;
+    
+    card.querySelector("button").addEventListener("click", () => {
+      castVote(candidate);
+    });
+    candidateList.appendChild(card);
+  });
 }
 
-/* Login */
-function loadLogin() {
-  content.innerHTML = `
-    <h2>User Login</h2>
-    <form onsubmit="loginUser(event)">
-      <input id="loginVoterId" type="text" placeholder="Voter ID" required>
-      <input id="loginPassword" type="password" placeholder="Password" required>
-      <button type="submit">Login</button>
-    </form>
+/*Cast Vote*/
+function castVote(candidate) {
+  const confirmed = confirm(`Vote for ${candidate.name} (${candidate.party})?\n\nThis cannot be undone.`);
+  
+  if (!confirmed) return;
+  const voterId = localStorage.getItem("currentVoter");
+  if (!voterId) return;
+  
+  //Get votes and voted users
+  let votes = JSON.parse(localStorage.getItem("votes")) || {};
+  let votedUsers = JSON.parse(localStorage.getItem("votedUsers")) || [];
+
+  //Record vote
+  votes[candidate.id] = (votes[candidate.id] || 0) + 1;
+  votedUsers.push(voterId);
+  
+  //Save to localStorage
+  localStorage.setItem("votes", JSON.stringify(votes));
+  localStorage.setItem("votedUsers", JSON.stringify(votedUsers));
+  localStorage.removeItem("currentVoter");
+  
+  //Clear form
+  voterIdInput.value = "";
+  candidateList.innerHTML = "";
+  alert("Thank you! Your vote has been recorded.");
+  showResults();
+  showPage("results");
+}
+
+/*Show Results*/
+function showResults() {
+  const votes = JSON.parse(localStorage.getItem("votes")) || {};
+  const totalVotes = Object.values(votes).reduce((sum, count) => sum + count, 0);
+  
+  //Show total votes
+  resultsStats.innerHTML = `
+    <h3>Total Votes Cast</h3>
+    <div class="total-votes">${totalVotes}</div>
   `;
+  resultsContainer.innerHTML = "";
+  
+  //Empty state
+  if (totalVotes === 0) {
+    resultsContainer.innerHTML = `
+      <div class="empty-state">
+        <h3>No votes cast yet</h3>
+        <p>Be the first to vote!</p>
+      </div>
+    `;
+    return;
+  }
+  
+  //Show results
+  candidates.forEach(candidate => {
+    const voteCount = votes[candidate.id] || 0;
+    const percentage = ((voteCount / totalVotes) * 100).toFixed(1);
+    
+    const resultItem = document.createElement("div");
+    resultItem.className = "result-item";
+    resultItem.innerHTML = `
+      <div class="result-header">
+        <h3>${candidate.name}</h3>
+        <span class="result-count">${voteCount} votes</span>
+      </div>
+      <p class="result-party">${candidate.party}</p>
+      <div class="result-bar">
+        <div class="result-fill" style="width: ${percentage}%">
+          ${percentage > 10 ? percentage + '%' : ''}
+        </div>
+      </div>
+      <p class="result-percentage">${percentage}% of total votes</p>
+    `;
+    
+    resultsContainer.appendChild(resultItem);
+  });
 }
 
-function loginUser(e) {
-  e.preventDefault();
-
-  fetch(`${API_BASE}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      voter_id: loginVoterId.value,
-      password: loginPassword.value
-    })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        loadDashboard();
-      } else {
-        alert(data.message);
-      }
-    });
-}
-
-/* Dashboard */
-function loadDashboard() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (!user) return loadLogin();
-
-  fetch(`${API_BASE}/candidates`)
-    .then(res => res.json())
-    .then(candidates => {
-      let html = `<h2>Voting Dashboard</h2>`;
-      candidates.forEach(c => {
-        html += `
-          <div class="card">
-            <h3>${c.name}</h3>
-            <p>Party: ${c.party}</p>
-            <button onclick="castVote(${user.id}, ${c.id}); this.disabled=true;">
-              Vote
-            </button>
-          </div>
-        `;
-      });
-      content.innerHTML = html;
-    });
-}
-
-function castVote(userId, candidateId) {
-  fetch(`${API_BASE}/vote`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ user_id: userId, candidate_id: candidateId })
-  })
-    .then(res => res.json())
-    .then(data => alert(data.message));
-}
-
-/* Admin */
-function loadAdmin() {
-  fetch(`${API_BASE}/results`)
-    .then(res => res.json())
-    .then(results => {
-      let html = `<h2>Admin Dashboard</h2>`;
-      results.forEach(r => {
-        html += `<p>${r.name}: ${r.vote_count} votes</p>`;
-      });
-      content.innerHTML = html;
-    });
-}
-
-/* Navigation */
-document.querySelectorAll("nav a").forEach(link => {
-  link.addEventListener("click", e => {
+/*Navigation*/
+navLinks.forEach(link => {
+  link.addEventListener("click", (e) => {
     e.preventDefault();
-    const page = link.getAttribute("href").substring(1);
-
-    if (page === "home") loadHome();
-    if (page === "register") loadRegister();
-    if (page === "login") loadLogin();
-    if (page === "dashboard") loadDashboard();
-    if (page === "admin") loadAdmin();
+    const page = link.dataset.page;
+    if (page === "results") {
+      showResults();
+    }
+    
+    showPage(page);
   });
 });
+
+showPage("home");
+localStorage.removeItem("currentVoter");
